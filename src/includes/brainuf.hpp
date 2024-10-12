@@ -6,48 +6,9 @@
 #include <sstream>
 #include <unordered_map>
 #include <functional>
+#include <cmath>
 
 int gcd(int nums[]);
-
-std::unordered_set<std::string> validTokens = {
-        "set",
-        "move",
-        "front", "right"
-};
-
-std::unordered_map<std::string,int> type_mapper = {
-
-    {
-        "num",
-        0
-    },
-    {
-        "str",
-        1
-    },
-    {
-        "bool",
-        2
-    }
-
-};
-
-std::unordered_map<std::string, std::unordered_map<std::string,std::string>> tokens = {
-    {
-        "set", // token as key
-        {
-            {"args","yes"},
-            {"type","num"}
-        }
-    },
-    {
-        "move",
-        {
-            {"args","yes"},
-            {"type","num"}
-        }
-    }
-};
 
 class brainfuck {
 
@@ -58,6 +19,7 @@ class brainfuck {
     std::vector<std::string> lex; /* ! Current lexer code (UPDATED PER LINE) */
     std::vector<std::string> compiled_code; /* This code will be written to the output file */
     std::string* current_line;
+    std::unordered_set<std::string> validTokens;
 
     /* Token skipped/ args collected */
     int argsCollectedLength;
@@ -73,9 +35,10 @@ class brainfuck {
     public: //! Public
 
     brainfuck();
+    ~brainfuck();
+
     void lexCode(std::string line);
     int validate(std::string* token);
-    std::vector<int> brainfuck::tokenInfo(std::string* token);
 
     /* Keyword functions */
 

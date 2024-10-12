@@ -4,7 +4,6 @@
 #include <filesystem>
 #include <fstream>
 #include <getopt.h>
-#include <unistd.h>
 #include <stdlib.h>
 
 #include "includes/brainuf.hpp"
@@ -14,7 +13,7 @@ void help();
 int main(int argc, char* argv[]) {
 
     int verbose = 0;
-    std::string outputFileName = "a.brain", sourceFileName = nullptr,line;
+    std::string outputFileName = "a.brain", sourceFileName = "",line;
     int unoptimized = 0;
     int opt;
 
@@ -35,10 +34,8 @@ int main(int argc, char* argv[]) {
         help();
         return 1; // * Exit your program.
     };
-    
-    opt = getopt_long(argc,argv,"vhuo:", long_options, nullptr);
 
-    while (opt != -1) {
+    while ((opt = getopt_long(argc,argv,"vhuo:", long_options, nullptr)) != -1) {
         switch(opt) {
 
             case 'v':
@@ -64,7 +61,6 @@ int main(int argc, char* argv[]) {
                 break;
             
             default:
-
                 break; /* Do nothing in other cases */
 
         };

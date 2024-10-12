@@ -19,6 +19,21 @@ brainfuck::brainfuck() { // * Constructor
     current_line = new std::string;
     memory_pointer = new int(0);
 
+    validTokens.insert("set");
+    validTokens.insert("move");
+    validTokens.insert("loop");
+    validTokens.insert("front");
+    validTokens.insert("right");
+    validTokens.insert("back");
+    validTokens.insert("left");
+    validTokens.insert("inc");
+    validTokens.insert("dec");
+    validTokens.insert("inctill");
+    validTokens.insert("dectill");
+    validTokens.insert("print");
+    validTokens.insert("whatis");
+    validTokens.insert("end");
+
     execTokens["set"] = [this]() { this->set(); };
     execTokens["front"] = [this]() { this->front(); };
     execTokens["right"] = [this]() { this->front(); };
@@ -57,28 +72,11 @@ int brainfuck::validate(std::string* token) {
 
 };
 
-std::vector<int> brainfuck::tokenInfo(std::string* token) {
-
-    // ! Return type: element-1: args needed (bool), element-2: args type ( 0 -> num, 1 -> string, 2 -> bool )
-
-    std::vector<int> res;
-
-    if (tokens.at(*token).at("args") == "yes") {
-        res.push_back(1);
-        res.push_back(type_mapper.at(tokens.at(*token).at("type")));
-    } else res.push_back(0);
-    
-    return res;
-
-};
-
 void brainfuck::lexCode(std::string line) {
 
     *current_line = line;
 
     if (line.at(0) == '#') return; // ! Comment
-
-    bool token_active = false;
 
     std::string collection = "";
 
@@ -86,7 +84,7 @@ void brainfuck::lexCode(std::string line) {
 
         *pointer = i;
 
-        if (line.at(i) == ' ') { // * consider to obtain a token.
+        if (line.at(i) == ' ' || line.at(i) == '\n' || line.at(i) == ';') { // * consider to obtain a token.
 
             if (collection.empty()) continue;
 
@@ -99,22 +97,13 @@ void brainfuck::lexCode(std::string line) {
                 throw invalidToken(ss.str());
             }; // * Verify if the keyword is right.
 
-            std::vector<int> tkinfo = tokenInfo(&collection);
-
-            if (tkinfo.at(0)) {
-                // todo Make the argument collector.
-                // todo add i with the amount of letters taken as argument by the function.
-            };
-
-        } else if (line.at(i) == '\n' || line.at(i) == ';') { // ! Consider the token with arguments to be complete. Validate it!
+            exec_func(collection,execTokens);
 
         } else {
             collection += line.at(i);
         };
 
     };
-
-    lex.push_back(line); // todo make the lexer/parser.
 
 }
 
@@ -146,6 +135,12 @@ void brainfuck::set(void) {
             // * Our arg must be a num!
             // * Validate by isNan
             // * now generate the code for this.
+
+            if (args.length() == 0) {
+                std::stringstream err_msg;
+                err_msg << "Expected an argument for the keyword set, Received None. \n" << "At: " << *current_line << "\n";
+                throw std::invalid_argument(err_msg.str());
+            }
 
             toSet = toInt(args,*current_line);
             break;
@@ -366,6 +361,18 @@ void brainfuck::move(void) {
     argsCollectedLength = j;
 
 };
+
+void brainfuck::print(void) {
+
+};
+
+void brainfuck::loop(void) {
+
+}
+
+void brainfuck::whatis(void) {
+
+}
 
 void brainfuck::end_loop(void) {
 
