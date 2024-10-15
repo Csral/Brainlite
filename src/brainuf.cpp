@@ -12,6 +12,16 @@ void brainfuck::exec_func(const std::string& tokenId, const std::unordered_map<s
 
 };
 
+void brainfuck::debug_tester(void) {
+
+    for (std::string code : compiled_code) {
+
+        std::cout << code << std::endl;
+
+    };
+
+};
+
 brainfuck::brainfuck() { // * Constructor
 
     pointer = new int(0); // ! Pointer starts at 0
@@ -123,7 +133,7 @@ void brainfuck::set(void) {
     std::string code = ">++++[>";
     int toSet = 0;
     int j = (*pointer)+1;
-    int *looper = new int;
+    int looper = 0;
 
     int top = 0;
     int bottom = 0;
@@ -142,7 +152,6 @@ void brainfuck::set(void) {
                 throw std::invalid_argument(err_msg.str());
             }
 
-            toSet = toInt(args,*current_line);
             break;
 
         };
@@ -152,19 +161,17 @@ void brainfuck::set(void) {
     };
 
     // * now, find the best way to write a code for doing toSet using gcd.
+    toSet = toInt(args);
+    
+    top = ceil(float(toSet)/4);
+    bottom = floor(float(toSet)/4);
 
-    top = (int) ceil(toSet/4);
-    bottom = (int) floor(toSet/4);
-    *looper = 0;
-
-    while (*looper < top) {
+    while (looper < top) {
 
         code += "+";
-        *looper++;
+        looper++;
 
     };
-
-    delete looper;
 
     code += "<-]>";
 
@@ -222,7 +229,7 @@ void brainfuck::inctill(void) {
     std::string code = "";
     int toSet = 0;
     int j = (*pointer)+1;
-    int *looper = new int;
+    int *looper = new int(0);
 
     for (;j<current_line->length();j++) {
 
@@ -232,7 +239,7 @@ void brainfuck::inctill(void) {
             // * Validate by isNan
             // * now generate the code for this.
 
-            toSet = toInt(args,*current_line);
+            toSet = toInt(args);
             break;
 
         };
@@ -240,8 +247,6 @@ void brainfuck::inctill(void) {
         args += current_line->at(j);
 
     };
-
-    *looper = 0;
 
     while (*looper < toSet) {
 
@@ -278,7 +283,7 @@ void brainfuck::dectill(void) {
             // * Validate by isNan
             // * now generate the code for this.
 
-            toSet = toInt(args,*current_line);
+            toSet = toInt(args);
             break;
 
         };
@@ -336,7 +341,7 @@ void brainfuck::move(void) {
             // * Validate by isNan
             // * now generate the code for this.
 
-            toMove = toInt(args,*current_line);
+            toMove = toInt(args);
             break;
 
         };

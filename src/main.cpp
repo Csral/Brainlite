@@ -79,7 +79,9 @@ int main(int argc, char* argv[]) {
 
     // todo Start the transpiler here.
 
-    if (!std::filesystem::exists(currentDir+sourceFileName)) {
+    std::cout << currentDir+sourceFileName << std::endl;
+
+    if (!std::filesystem::exists(currentDir+"/"+sourceFileName)) {
         std::cerr << "Error: Cannot find the source file specified " << sourceFileName << " at " << currentDir << std::endl;
         return 1;
     };
@@ -94,6 +96,8 @@ int main(int argc, char* argv[]) {
     while (std::getline(source,line)) {
         bf.lexCode(line);
     };
+
+    bf.debug_tester();
 
     return 0;
 

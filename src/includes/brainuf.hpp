@@ -1,5 +1,7 @@
 #pragma once
 
+#include <iostream>
+
 #include <vector>
 #include <string>
 #include <unordered_set>
@@ -39,6 +41,7 @@ class brainfuck {
 
     void lexCode(std::string line);
     int validate(std::string* token);
+    void debug_tester(void);
 
     /* Keyword functions */
 
