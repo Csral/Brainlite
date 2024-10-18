@@ -86,6 +86,8 @@ void brainfuck::lexCode(std::string line) {
 
     *current_line = line;
 
+    if (line.empty()) return;
+
     if (line.at(0) == '#') return; // ! Comment
 
     std::string collection = "";
@@ -94,20 +96,27 @@ void brainfuck::lexCode(std::string line) {
 
         *pointer = i;
 
-        if (line.at(i) == ' ' || line.at(i) == '\n' || line.at(i) == ';') { // * consider to obtain a token.
+        if (i+1 == line.length()) collection += line.at(i);
+
+        if (line.at(i) == ' ' || line.at(i) == '\n' || i+1 == line.length() || line.at(i) == ';') { // * consider to obtain a token.
 
             if (collection.empty()) continue;
 
             if (!validate(&collection)) {
+                // todo SYNTAX ERROR BY COUT.
 
-                std::stringstream ss;
+                std::string errMsg = collection + " is not a valid keyword\nAt: " + line;
 
-                ss << collection << " is not a valid keyword\nAt: " << line << "\n";
+                delete pointer;
+                delete current_line;
+                delete memory_pointer;
 
-                throw invalidToken(ss.str());
+                throw invalidToken(errMsg);
             }; // * Verify if the keyword is right.
 
             exec_func(collection,execTokens);
+
+            i += argsCollectedLength;
 
         } else {
             collection += line.at(i);
@@ -149,6 +158,11 @@ void brainfuck::set(void) {
             if (args.length() == 0) {
                 std::stringstream err_msg;
                 err_msg << "Expected an argument for the keyword set, Received None. \n" << "At: " << *current_line << "\n";
+
+                delete pointer;
+                delete current_line;
+                delete memory_pointer;
+
                 throw std::invalid_argument(err_msg.str());
             }
 
@@ -181,6 +195,8 @@ void brainfuck::set(void) {
         toSet++;
     
     };
+
+    code += "<";
 
     // ! Logic: Loop 4 times with greatest of num/4 and then remove extra 4's form ceil.
 
@@ -242,6 +258,9 @@ void brainfuck::inctill(void) {
             if (args.length() == 0) {
                 std::stringstream err_msg;
                 err_msg << "Expected an argument for the keyword set, Received None. \n" << "At: " << *current_line << "\n";
+                delete pointer;
+                delete current_line;
+                delete memory_pointer;
                 throw std::invalid_argument(err_msg.str());
             }
 
@@ -291,6 +310,9 @@ void brainfuck::dectill(void) {
             if (args.length() == 0) {
                 std::stringstream err_msg;
                 err_msg << "Expected an argument for the keyword set, Received None. \n" << "At: " << *current_line << "\n";
+                delete pointer;
+                delete current_line;
+                delete memory_pointer;
                 throw std::invalid_argument(err_msg.str());
             }
 
@@ -349,7 +371,15 @@ void brainfuck::move(void) {
             // * Validate by isNan
             // * now generate the code for this.
 
-            toMove = toInt(args);
+            if (args.length() == 0) {
+                std::stringstream err_msg;
+                err_msg << "Expected an argument for the keyword set, Received None. \n" << "At: " << *current_line << "\n";
+                delete pointer;
+                delete current_line;
+                delete memory_pointer;
+                throw std::invalid_argument(err_msg.str());
+            }
+
             break;
 
         };
@@ -357,6 +387,8 @@ void brainfuck::move(void) {
         args += current_line->at(j);
 
     };
+
+    toMove = toInt(args);
 
     while (looper < toMove) {
 
