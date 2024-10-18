@@ -215,7 +215,7 @@ void brainfuck::dec(void) {
 
     //* Increases one bit
 
-    compiled_code.push_back("+");
+    compiled_code.push_back("-");
 
 };
 
@@ -225,11 +225,14 @@ void brainfuck::inctill(void) {
 
     //! Return type: No. of characters read for input.
 
+    
+    std::cout <<  "\n" <<  "I AM CALLED" << std::endl;
+
     std::string args = "";
     std::string code = "";
     int toSet = 0;
     int j = (*pointer)+1;
-    int *looper = new int(0);
+    int looper = 0;
 
     for (;j<current_line->length();j++) {
 
@@ -239,7 +242,12 @@ void brainfuck::inctill(void) {
             // * Validate by isNan
             // * now generate the code for this.
 
-            toSet = toInt(args);
+            if (args.length() == 0) {
+                std::stringstream err_msg;
+                err_msg << "Expected an argument for the keyword set, Received None. \n" << "At: " << *current_line << "\n";
+                throw std::invalid_argument(err_msg.str());
+            }
+
             break;
 
         };
@@ -248,14 +256,19 @@ void brainfuck::inctill(void) {
 
     };
 
-    while (*looper < toSet) {
+    toSet = toInt(args);
+
+    std::cout << "\n" <<  toSet << std::endl;
+
+    while (looper < toSet) {
 
         code += "+";
-        *looper++;
+        
+        std::cout << "\n" << looper << std::endl;
+        
+        looper++;
 
     };
-
-    delete looper;
 
     compiled_code.push_back(code);
 
@@ -273,7 +286,7 @@ void brainfuck::dectill(void) {
     std::string code = "";
     int toSet = 0;
     int j = (*pointer)+1;
-    int *looper = new int;
+    int looper = 0;
 
     for (;j<current_line->length();j++) {
 
@@ -283,7 +296,12 @@ void brainfuck::dectill(void) {
             // * Validate by isNan
             // * now generate the code for this.
 
-            toSet = toInt(args);
+            if (args.length() == 0) {
+                std::stringstream err_msg;
+                err_msg << "Expected an argument for the keyword set, Received None. \n" << "At: " << *current_line << "\n";
+                throw std::invalid_argument(err_msg.str());
+            }
+
             break;
 
         };
@@ -292,16 +310,14 @@ void brainfuck::dectill(void) {
 
     };
 
-    *looper = 0;
+    toSet = toInt(args);
 
-    while (*looper < toSet) {
+    while (looper < toSet) {
 
         code += "-";
-        *looper++;
+        looper++;
 
     };
-
-    delete looper;
 
     compiled_code.push_back(code);
 
@@ -320,7 +336,7 @@ void brainfuck::move(void) {
     std::string code = "";
     int toMove = 0;
     int j = (*pointer)+1;
-    int *looper = new int;
+    int looper = 0;
 
     int top = 0;
     int bottom = 0;
@@ -350,16 +366,12 @@ void brainfuck::move(void) {
 
     };
 
-    *looper = 0;
-
-    while (*looper < toMove) {
+    while (looper < toMove) {
 
         code += (backwards) ? "<" : ">";
-        *looper++;
+        looper++;
 
     };
-
-    delete looper;
 
     compiled_code.push_back(code);
 
