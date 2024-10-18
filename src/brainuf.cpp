@@ -225,9 +225,6 @@ void brainfuck::inctill(void) {
 
     //! Return type: No. of characters read for input.
 
-    
-    std::cout <<  "\n" <<  "I AM CALLED" << std::endl;
-
     std::string args = "";
     std::string code = "";
     int toSet = 0;
@@ -258,14 +255,9 @@ void brainfuck::inctill(void) {
 
     toSet = toInt(args);
 
-    std::cout << "\n" <<  toSet << std::endl;
-
     while (looper < toSet) {
 
         code += "+";
-        
-        std::cout << "\n" << looper << std::endl;
-        
         looper++;
 
     };
