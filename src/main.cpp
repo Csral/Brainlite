@@ -1,12 +1,21 @@
 #include <iostream>
 #include <stdio.h>
 #include <map>
-#include <filesystem>
 #include <fstream>
-#include <getopt.h>
 #include <stdlib.h>
 
 #include "includes/brainuf.hpp"
+
+#ifndef _WIN32
+
+#include <filesystem>
+#include <getopt.h>
+
+#else
+
+// todo Windows system.
+
+#endif
 
 void help();
 
@@ -19,7 +28,7 @@ int main(int argc, char* argv[]) {
 
     std::string currentDir = std::filesystem::current_path();
 
-    brainfuck bf;
+    brainlite bf;
 
     struct option long_options[] = {
         {"verbose", no_argument, 0, 'v'},
@@ -77,10 +86,6 @@ int main(int argc, char* argv[]) {
 
     };
 
-    // todo Start the transpiler here.
-
-    std::cout << currentDir+sourceFileName << std::endl;
-
     if (!std::filesystem::exists(currentDir+"/"+sourceFileName)) {
         std::cerr << "Error: Cannot find the source file specified " << sourceFileName << " at " << currentDir << std::endl;
         return 1;
@@ -97,7 +102,22 @@ int main(int argc, char* argv[]) {
         bf.lexCode(line);
     };
 
-    bf.debug_tester();
+    std::ofstream output(outputFileName);
+
+    if (!output.is_open()) {
+
+        std::cerr << "Error: Unable to open the output file for writing." << std::endl;
+        return 1;
+
+    };
+
+    std::vector<std::string> code = bf.getCode();
+
+    for (std::string bfCode : code) {
+        output << bfCode;
+    };
+
+    output << "\n";
 
     return 0;
 
@@ -106,10 +126,10 @@ int main(int argc, char* argv[]) {
 void help() {
 
     fprintf(stdout, "\t\t\tBrain-Un-Fuck\t\t\t\n\
-    Welcome to brain un fuck, a transpiler which converts the written unfuck program to a pure and optimized brainfuck program\n\
+    Welcome to brain un fuck, a transpiler which converts the written unfuck program to a pure and optimized brainlite program\n\
     Usage: brainuf <unfuck source file> [options]\n\
     Options are:\n\
     \t-u --unoptimized\t -> \t Returns a pure brain program which is not optimized.\n\t\t  \t\
-    Forces the transpiler to convert given unfuck program to raw brainfuck program");
+    Forces the transpiler to convert given unfuck program to raw brainlite program");
 
 };

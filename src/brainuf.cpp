@@ -2,7 +2,7 @@
 #include "includes/errors.hpp"
 #include "includes/utils.hpp"
 
-void brainfuck::exec_func(const std::string& tokenId, const std::unordered_map<std::string, std::function<void()>>& no_args) {
+void brainlite::exec_func(const std::string& tokenId, const std::unordered_map<std::string, std::function<void()>>& no_args) {
 
     auto find_fn = no_args.find(tokenId);
 
@@ -12,7 +12,7 @@ void brainfuck::exec_func(const std::string& tokenId, const std::unordered_map<s
 
 };
 
-void brainfuck::debug_tester(void) {
+void brainlite::debug_tester(void) {
 
     for (std::string code : compiled_code) {
 
@@ -22,12 +22,15 @@ void brainfuck::debug_tester(void) {
 
 };
 
-brainfuck::brainfuck() { // * Constructor
+brainlite::brainlite() { // * Constructor
 
     pointer = new int(0); // ! Pointer starts at 0
     argsCollectedLength = 0;
     current_line = new std::string;
-    memory_pointer = new int(0);
+    skipIfError = false;
+    memory_pointer = 0;
+    internalSet = false;
+    internalVal = 0;
 
     validTokens.insert("set");
     validTokens.insert("move");
@@ -61,13 +64,18 @@ brainfuck::brainfuck() { // * Constructor
 
 };
 
-brainfuck::~brainfuck() { // * Destructor
+brainlite::~brainlite() { // * Destructor
     delete pointer;  // Free dynamically allocated memory
     delete current_line;
-    delete memory_pointer;
-}
+};
 
-int brainfuck::validate(std::string* token) {
+std::vector<std::string> brainlite::getCode(void) {
+
+    return compiled_code;
+    
+};
+
+int brainlite::validate(std::string* token) {
 
     if (token == nullptr) {
 
@@ -82,13 +90,19 @@ int brainfuck::validate(std::string* token) {
 
 };
 
-void brainfuck::lexCode(std::string line) {
+void brainlite::lexCode(std::string line) {
 
     *current_line = line;
+
+    skipIfError = false;
 
     if (line.empty()) return;
 
     if (line.at(0) == '#') return; // ! Comment
+
+    if (endQuestionMark(line)) {
+        skipIfError = true;
+    };
 
     std::string collection = "";
 
@@ -104,14 +118,14 @@ void brainfuck::lexCode(std::string line) {
 
             if (!validate(&collection)) {
                 // todo SYNTAX ERROR BY COUT.
+                if (!skipIfError) {
+                    std::string errMsg = collection + " is not a valid keyword\nAt: " + line;
 
-                std::string errMsg = collection + " is not a valid keyword\nAt: " + line;
+                    delete pointer;
+                    delete current_line;
 
-                delete pointer;
-                delete current_line;
-                delete memory_pointer;
-
-                throw invalidToken(errMsg);
+                    throw invalidToken(errMsg);
+                };
             }; // * Verify if the keyword is right.
 
             exec_func(collection,execTokens);
@@ -134,69 +148,110 @@ void brainfuck::lexCode(std::string line) {
 
 */
 
-void brainfuck::set(void) {
+int brainlite::currentValue(void) {
 
-    //! Return type: No. of characters read for input.
+    //! Assumes that there would be no complex statement elements, i.e., statements like "+++>" or such.
 
-    std::string args = "";
-    std::string code = ">++++[>";
-    int toSet = 0;
-    int j = (*pointer)+1;
-    int looper = 0;
+    int value = 0;
 
-    int top = 0;
-    int bottom = 0;
+    int i = compiled_code.size()-1;
 
-    for (;j<current_line->length();j++) {
+    while (i > -1) {
 
-        if (current_line->at(j) == ' ' || current_line->at(j) == '\n' || current_line->at(j) == ';') { // * The line/args ended.
-
-            // * Our arg must be a num!
-            // * Validate by isNan
-            // * now generate the code for this.
-
-            if (args.length() == 0) {
-                std::stringstream err_msg;
-                err_msg << "Expected an argument for the keyword set, Received None. \n" << "At: " << *current_line << "\n";
-
-                delete pointer;
-                delete current_line;
-                delete memory_pointer;
-
-                throw std::invalid_argument(err_msg.str());
-            }
-
+        if (compiled_code.at(i).find(">") != std::string::npos || compiled_code.at(i).find("<") != std::string::npos) {
             break;
+        } else {
+
+            for (char miniToken : compiled_code.at(i)) {
+
+                if (miniToken == '+') {
+                    
+                    if (value == 255) value = -1;
+
+                    value++;
+
+                }
+                else if (miniToken == '-') {
+                    
+                    if (value == 0) value = 256;
+                    
+                    value--;
+                }
+                else continue;
+
+            };
 
         };
 
-        args += current_line->at(j);
+        i--;
 
     };
 
-    // * now, find the best way to write a code for doing toSet using gcd.
-    toSet = toInt(args);
-    
-    top = ceil(float(toSet)/4);
-    bottom = floor(float(toSet)/4);
+    return value;
 
-    while (looper < top) {
+};
+
+void brainlite::set() {
+
+    //! Return type: No. of characters read for input.
+
+    // ! Current element becomes looper
+
+    std::string args = "";
+    std::string code = "";
+    int toSet = 0;
+    int j = (*pointer)+1;
+
+    int looper = 0;
+
+    if (internalSet) {
+
+        toSet = internalVal;
+
+    } else {
+
+        for (;j<current_line->length();j++) {
+
+            if (current_line->at(j) == ' ' || current_line->at(j) == '\n' || current_line->at(j) == ';') { // * The line/args ended.
+
+                // * Our arg must be a num!
+                // * Validate by isNan
+                // * now generate the code for this.
+
+                if (args.length() == 0) {
+
+                    if (skipIfError) return;
+
+                    std::stringstream err_msg;
+                    err_msg << "Expected an argument for the keyword set, Received None. \n" << "At: " << *current_line << "\n";
+
+                    delete pointer;
+                    delete current_line;
+
+                    throw std::invalid_argument(err_msg.str());
+                }
+
+                break;
+
+            };
+
+            args += current_line->at(j);
+
+        };
+
+        // * now, find the best way to write a code for doing toSet using gcd.
+        toSet = toInt(args);
+
+        toSet = ringBuffer(toSet);
+    
+    };
+
+    while (looper < toSet) {
 
         code += "+";
         looper++;
 
     };
-
-    code += "<-]>";
-
-    while ((4*top - toSet) > 0) {
-
-        code += '-';
-        toSet++;
-    
-    };
-
-    code += "<";
 
     // ! Logic: Loop 4 times with greatest of num/4 and then remove extra 4's form ceil.
 
@@ -206,19 +261,21 @@ void brainfuck::set(void) {
 
 };
 
-void brainfuck::front(void) {
+void brainlite::front(void) {
 
     compiled_code.push_back(">");
+    memory_pointer++;
 
 };
 
-void brainfuck::back(void) {
+void brainlite::back(void) {
 
     compiled_code.push_back("<");
+    memory_pointer--;
 
 };
 
-void brainfuck::inc(void) {
+void brainlite::inc(void) {
 
     //* Increases one bit
 
@@ -227,7 +284,7 @@ void brainfuck::inc(void) {
 };
 
 
-void brainfuck::dec(void) {
+void brainlite::dec(void) {
 
     //* Increases one bit
 
@@ -235,7 +292,7 @@ void brainfuck::dec(void) {
 
 };
 
-void brainfuck::inctill(void) {
+void brainlite::inctill(void) {
 
     //* Increases n bit
 
@@ -245,7 +302,7 @@ void brainfuck::inctill(void) {
     std::string code = "";
     int toSet = 0;
     int j = (*pointer)+1;
-    int looper = 0;
+    int looper = brainlite::currentValue();
 
     for (;j<current_line->length();j++) {
 
@@ -256,11 +313,13 @@ void brainfuck::inctill(void) {
             // * now generate the code for this.
 
             if (args.length() == 0) {
+
+                if (skipIfError) return;
+
                 std::stringstream err_msg;
                 err_msg << "Expected an argument for the keyword set, Received None. \n" << "At: " << *current_line << "\n";
                 delete pointer;
                 delete current_line;
-                delete memory_pointer;
                 throw std::invalid_argument(err_msg.str());
             }
 
@@ -273,6 +332,8 @@ void brainfuck::inctill(void) {
     };
 
     toSet = toInt(args);
+
+    toSet = ringBuffer(toSet);
 
     while (looper < toSet) {
 
@@ -287,7 +348,7 @@ void brainfuck::inctill(void) {
 
 };
 
-void brainfuck::dectill(void) {
+void brainlite::dectill(void) {
 
     //* dec n bit
 
@@ -297,7 +358,7 @@ void brainfuck::dectill(void) {
     std::string code = "";
     int toSet = 0;
     int j = (*pointer)+1;
-    int looper = 0;
+    int looper = brainlite::currentValue();
 
     for (;j<current_line->length();j++) {
 
@@ -308,11 +369,13 @@ void brainfuck::dectill(void) {
             // * now generate the code for this.
 
             if (args.length() == 0) {
+
+                if (skipIfError) return;
+
                 std::stringstream err_msg;
                 err_msg << "Expected an argument for the keyword set, Received None. \n" << "At: " << *current_line << "\n";
                 delete pointer;
                 delete current_line;
-                delete memory_pointer;
                 throw std::invalid_argument(err_msg.str());
             }
 
@@ -326,10 +389,10 @@ void brainfuck::dectill(void) {
 
     toSet = toInt(args);
 
-    while (looper < toSet) {
+    while (looper > toSet) {
 
         code += "-";
-        looper++;
+        toSet++;
 
     };
 
@@ -340,7 +403,7 @@ void brainfuck::dectill(void) {
 };
 
 
-void brainfuck::move(void) {
+void brainlite::move(void) {
 
     //* move n bit
 
@@ -372,11 +435,13 @@ void brainfuck::move(void) {
             // * now generate the code for this.
 
             if (args.length() == 0) {
+
+                if (skipIfError) return;
+
                 std::stringstream err_msg;
                 err_msg << "Expected an argument for the keyword set, Received None. \n" << "At: " << *current_line << "\n";
                 delete pointer;
                 delete current_line;
-                delete memory_pointer;
                 throw std::invalid_argument(err_msg.str());
             }
 
@@ -390,10 +455,36 @@ void brainfuck::move(void) {
 
     toMove = toInt(args);
 
-    while (looper < toMove) {
+    if (toMove == 0) {
 
-        code += (backwards) ? "<" : ">";
-        looper++;
+        while (memory_pointer > 0) {
+            code += "<";
+            memory_pointer--;
+        };
+
+    } else {
+
+        if (backwards) {
+
+            while (looper < toMove) {
+
+                code += "<";
+                memory_pointer--;
+                looper++;
+
+            };
+        
+        } else {
+
+            while (looper < toMove) {
+
+                code += ">";
+                memory_pointer++;
+                looper++;
+
+            };
+
+        };
 
     };
 
@@ -403,19 +494,243 @@ void brainfuck::move(void) {
 
 };
 
-void brainfuck::print(void) {
+void brainlite::print(void) {
+
+    std::string args = "";
+    int toSet = 0;
+    int j = (*pointer)+1;
+    int looper = 0;
+    
+    bool ended = false;
+    std::stringstream err_msg;
+
+    if (current_line->at(j) != '"') {
+
+        if (skipIfError) return;
+
+        err_msg << "Expected \" after print statement. Found none\n" << "At: " << *current_line << "\n";
+        throw std::invalid_argument(err_msg.str());
+    };
+
+    j++; // * This is done so that the pointer moves forward by unity and allows for the pointer to be set at the start of string.
+
+    for (;j<current_line->length();j++) {
+
+        if (current_line->at(j) == '"') {
+            ended = true;
+        };
+
+        if (current_line->at(j) == '"' || current_line->at(j) == ' ' || current_line->at(j) == '\n' || current_line->at(j) == ';') { // * The line/args ended.
+
+            // * Our arg must be a num!
+            // * Validate by isNan
+            // * now generate the code for this.
+
+            if (!ended) {
+
+                if (skipIfError) return;
+
+                err_msg << "Expected \" to end the print statement. Found none\n" << "At: " << *current_line << "\n";
+                throw std::invalid_argument(err_msg.str());
+
+            } else if (args.length() == 0) {
+
+                if (skipIfError) return;
+
+                err_msg << "Expected an argument for the keyword print, Received None. \n" << "At: " << *current_line << "\n";
+
+                delete pointer;
+                delete current_line;
+
+                throw std::invalid_argument(err_msg.str());
+            };
+
+            break;
+
+        };
+
+        args += current_line->at(j);
+
+    };
+
+    internalSet = true;
+
+    for (char letter : args) {
+
+        internalVal = ascii(letter);
+
+        brainlite::set();
+
+        compiled_code.push_back(">");
+
+    };
+
+    internalSet = false;
+
+    argsCollectedLength = j;
 
 };
 
-void brainfuck::loop(void) {
+void brainlite::input(void) {
+
+    std::string args = "";
+    std::string code = "";
+    int toSet = 0;
+    int j = (*pointer)+1;
+
+    int looper = 0;
+
+    if (internalSet) {
+
+        toSet = internalVal;
+
+    } else {
+
+        for (;j<current_line->length();j++) {
+
+            if (current_line->at(j) == ' ' || current_line->at(j) == '\n' || current_line->at(j) == ';') { // * The line/args ended.
+
+                // * Our arg must be a num!
+                // * Validate by isNan
+                // * now generate the code for this.
+
+                if (args.length() == 0) {
+
+                    if (skipIfError) return;
+
+                    std::stringstream err_msg;
+                    err_msg << "Expected an argument for the keyword input, Received None. \n" << "At: " << *current_line << "\n";
+
+                    delete pointer;
+                    delete current_line;
+
+                    throw std::invalid_argument(err_msg.str());
+                }
+
+                break;
+
+            };
+
+            args += current_line->at(j);
+
+        };
+
+        // * now, find the best way to write a code for doing toSet using gcd.
+        toSet = toInt(args);
+    
+    };
+
+    while (looper < toSet) {
+
+        code += ",";
+        looper++;
+
+    };
+
+    // ! Logic: Loop 4 times with greatest of num/4 and then remove extra 4's form ceil.
+
+    compiled_code.push_back(code);
+
+    argsCollectedLength = j;
+
+};
+
+void brainlite::loop(void) {
 
 }
 
-void brainfuck::whatis(void) {
+void brainlite::whatis(void) {
+
+    std::string args = "";
+    int toSet = 0;
+    int j = (*pointer)+1;
+    int looper = 0;
+    
+    bool ended = false;
+    std::string code = "";
+    std::stringstream err_msg;
+
+    if (current_line->at(j) != '"') {
+
+        if (skipIfError) return;
+
+        err_msg << "Expected \" after whatis statement. Found none\n" << "At: " << *current_line << "\n";
+        throw std::invalid_argument(err_msg.str());
+    };
+
+    j++; // * This is done so that the pointer moves forward by unity and allows for the pointer to be set at the start of string.
+
+    for (;j<current_line->length();j++) {
+
+        if (current_line->at(j) == '"') {
+            ended = true;
+        };
+
+        if (current_line->at(j) == '"' || current_line->at(j) == ' ' || current_line->at(j) == '\n' || current_line->at(j) == ';') { // * The line/args ended.
+
+            // * Our arg must be a num!
+            // * Validate by isNan
+            // * now generate the code for this.
+
+            if (!ended) {
+
+                if (skipIfError) return;
+
+                err_msg << "Expected \" to end the whatis statement. Found none\n" << "At: " << *current_line << "\n";
+                throw std::invalid_argument(err_msg.str());
+
+            } else if (args.length() == 0) {
+
+                if (skipIfError) return;
+
+                err_msg << "Expected an argument for the keyword whatis, Received None. \n" << "At: " << *current_line << "\n";
+
+                delete pointer;
+                delete current_line;
+
+                throw std::invalid_argument(err_msg.str());
+            };
+
+            break;
+
+        };
+
+        args += current_line->at(j);
+
+    };
+
+    internalSet = true;
+
+    // todo syntax make: whatis "memory pointer" is compiled as token = whatis, args = memorypointer. 
+    // todo compile based on that.
+
+    args = strip(args);
+    
+    std::transform(args.begin(),args.end(),args.begin(), [](unsigned char c) {
+        return std::tolower(c);
+    }); // * Lowercase args.
+
+    internalVal = memory_pointer;
+
+    if (args == "memorypointer") {
+
+        internalSet = true;
+
+        internalVal = memory_pointer;
+
+        brainlite::set();
+
+        internalSet = false;
+
+        compiled_code.push_back(".");
+
+    }
+
+    argsCollectedLength = j;
 
 }
 
-void brainfuck::end_loop(void) {
+void brainlite::end_loop(void) {
 
     /*
     Syntax:
