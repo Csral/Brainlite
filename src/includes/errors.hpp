@@ -3,6 +3,14 @@
 #include <stdexcept>
 #include <exception>
 
+class syntaxError : public std::runtime_error {
+
+    public:
+
+    syntaxError(const std::string& message) : std::runtime_error(message) {};
+
+};
+
 class invalidToken : public std::runtime_error {
 
     public:

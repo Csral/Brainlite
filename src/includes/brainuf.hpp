@@ -9,15 +9,17 @@
 #include <unordered_map>
 #include <functional>
 #include <cmath>
+#include <algorithm>
 
 int gcd(int nums[]);
 
-class brainfuck {
+class brainlite {
 
     private: //! Private
 
     int* pointer;
     bool looping;
+    bool skipIfError;
     std::vector<std::string> lex; /* ! Current lexer code (UPDATED PER LINE) */
     std::vector<std::string> compiled_code; /* This code will be written to the output file */
     std::string* current_line;
@@ -28,24 +30,30 @@ class brainfuck {
 
     /* Mappers */
     std::unordered_map<std::string, std::function<void()>> execTokens;
+    std::unordered_map<std::string, std::string> variables;
 
     /* For code */
 
-    int* memory_pointer;
+    int memory_pointer;
     bool isLooping;
+
+    bool internalSet;
+    int internalVal;
 
     public: //! Public
 
-    brainfuck();
-    ~brainfuck();
+    brainlite();
+    ~brainlite();
 
     void lexCode(std::string line);
     int validate(std::string* token);
     void debug_tester(void);
+    std::vector<std::string> getCode(void);
+    int currentValue(void);
 
     /* Keyword functions */
 
-    void set(void);
+    void set();
     void front(void);
     void back(void);
     void inc(void);
@@ -53,6 +61,7 @@ class brainfuck {
     void inctill(void);
     void dectill(void);
     void print(void);
+    void input(void);
     void move(void);
     void loop(void);
     void whatis(void);
