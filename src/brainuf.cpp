@@ -637,7 +637,68 @@ void brainlite::input(void) {
 
 void brainlite::loop(void) {
 
-}
+    /*
+    Syntax:
+    *    loop how many times
+    * things to do in loop
+    * end
+    * current/higher/lower -> current is denoted by 0. Current memory address/pointer is used as looper.
+    * higher is denoted by 1, it means to use next memory address as the looper
+    * lower means to use the memory address behind as looper
+    * end -> marks end of loop (writes '-]' at end of code.
+    */
+
+   std::string args = "";
+   std::string code = "";
+   bool outBreak = false;
+   int numTimes = 0;
+
+   int j = (*pointer)+1; 
+   
+    for (;j<current_line->length();j++) {
+
+        if (current_line->at(j) == ' ' || current_line->at(j) == '\n' || current_line->at(j) == ';') { // * The line/args ended.
+
+            // * Our first arg must be a num!
+            // * Validate by isNan
+            // * now generate the code for this.
+
+            if (args.length() == 0) {
+
+                if (skipIfError) return;
+
+                std::stringstream err_msg;
+                err_msg << "Expected an argument for the keyword input, Received None. \n" << "At: " << *current_line << "\n";
+
+                delete pointer;
+                delete current_line;
+
+                throw std::invalid_argument(err_msg.str());
+            }
+
+            break;
+
+        };
+
+        args += current_line->at(j);
+
+    };
+
+    internalSet = true;
+    internalVal = toInt(args);
+
+    brainlite::set(); // set number of times to loop at current address.
+
+    internalSet = false;
+    internalVal = 0;
+
+    isLooping = true; // set looping flag.
+
+    looperAddress.push_back(memory_pointer); // set current memory pointer as base address
+
+    argsCollectedLength = j; // return to lexer for normal lexing.
+
+};
 
 void brainlite::whatis(void) {
 
@@ -734,15 +795,46 @@ void brainlite::end_loop(void) {
 
     /*
     Syntax:
-    *    loop (how many times ; current/higher/lower)  things to do in loop end
-    * current/higher/lower -> current is denoted by 0. Current memory address/pointer is used as looper.
-    * higher is denoted by 1, it means to use next memory address as the looper
-    * lower means to use the memory address behind as looper
+    * Note: At end the memory pointer would be at looper's base address.
     * end -> marks end of loop (writes '-]' at end of code.
     */
 
+   std::string code = "";
+
     if (isLooping) {
         isLooping = false;
-    };
+
+        int moves_done = memory_pointer - looperAddress.back(); // * End the most recent loop (if nested loops)
+
+        looperAddress.pop_back(); // eliminate the element
+
+        bool backwards = (moves_done < 0); // current memory pointer is behind loop so bring front
+
+        while (moves_done) {
+
+            code += (backwards) ? ">" : "<";
+
+            moves_done--;
+        };
+
+        memory_pointer -= moves_done; // move pointer according to moves.
+
+        // refer to this example:
+
+        /*
+        
+        moves done =  -3 => we need to send it 3 times forward. so memory pointer + 3.
+
+        moves done = 3 => we need to send it 3 times backward. so memory pointer -3.
+        
+        */
+
+       code += "-]";
+
+       compiled_code.push_back(code);
+
+    } else {
+        //* Error: Not in loop but end_loop found!
+    }
 
 };

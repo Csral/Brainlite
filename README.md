@@ -5,3 +5,7 @@ The core principle of the language remains completely the same, i.e only 8 opera
 
 Brainlite introduces multiple keywords which can easen the task of writing
 a brainf*ck program manually.
+
+# Contributers
+
+Idea was given by @CodeLanderV

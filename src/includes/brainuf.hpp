@@ -18,7 +18,6 @@ class brainlite {
     private: //! Private
 
     int* pointer;
-    bool looping;
     bool skipIfError;
     std::vector<std::string> lex; /* ! Current lexer code (UPDATED PER LINE) */
     std::vector<std::string> compiled_code; /* This code will be written to the output file */
@@ -39,6 +38,8 @@ class brainlite {
 
     bool internalSet;
     int internalVal;
+
+    std::vector<int> looperAddress; // base address of looping. So memory_pointer - looperAddress = number of shifts in memory. 
 
     public: //! Public
 
