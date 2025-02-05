@@ -71,11 +71,19 @@ brainlite::~brainlite() { // * Destructor
 
 std::vector<std::string> brainlite::getCode(void) {
 
-    return compiled_code;
+    return compiled_code; // get transpiled code.
     
 };
 
 int brainlite::validate(std::string* token) {
+
+    /*
+    
+    * Returns the count of token encountered by lexCode() in validTokens
+    * Simply say, if token is not a valid token then count would be 0 which is boolean false.
+    * So token is not valid else it is valid.
+    
+    */
 
     if (token == nullptr) {
 
@@ -91,6 +99,12 @@ int brainlite::validate(std::string* token) {
 };
 
 void brainlite::lexCode(std::string line) {
+
+    /*
+    
+    * Main logic wise lexer.
+    
+    */
 
     *current_line = line;
 
@@ -191,7 +205,7 @@ int brainlite::currentValue(void) {
 
 };
 
-void brainlite::set() {
+void brainlite::set(void) {
 
     //! Return type: No. of characters read for input.
 
@@ -761,9 +775,6 @@ void brainlite::whatis(void) {
     };
 
     internalSet = true;
-
-    // todo syntax make: whatis "memory pointer" is compiled as token = whatis, args = memorypointer. 
-    // todo compile based on that.
 
     args = strip(args);
     

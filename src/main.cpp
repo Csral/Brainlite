@@ -1,23 +1,4 @@
-#include <iostream>
-#include <stdio.h>
-#include <map>
-#include <fstream>
-#include <stdlib.h>
-
-#include "includes/brainuf.hpp"
-
-#ifndef _WIN32
-
-#include <filesystem>
-#include <getopt.h>
-
-#else
-
-// todo Windows system.
-
-#endif
-
-void help();
+#include "includes/main.hpp"
 
 int main(int argc, char* argv[]) {
 
@@ -25,6 +6,8 @@ int main(int argc, char* argv[]) {
     std::string outputFileName = "a.brain", sourceFileName = "",line;
     int unoptimized = 0;
     int opt;
+
+    bool interpret = false;
 
     std::string currentDir = std::filesystem::current_path();
 
@@ -34,6 +17,7 @@ int main(int argc, char* argv[]) {
         {"verbose", no_argument, 0, 'v'},
         {"help", no_argument, 0, 'h'},
         {"unoptimized", no_argument, 0, 'u'},
+        {"interpreter", no_argument, 0, 'i'},
         {"output", required_argument, 0, 'o'},
         {0,0,0,0}
     };
@@ -44,7 +28,7 @@ int main(int argc, char* argv[]) {
         return 1; // * Exit your program.
     };
 
-    while ((opt = getopt_long(argc,argv,"vhuo:", long_options, nullptr)) != -1) {
+    while ((opt = getopt_long(argc,argv,"vhuio:", long_options, nullptr)) != -1) {
         switch(opt) {
 
             case 'v':
@@ -64,6 +48,10 @@ int main(int argc, char* argv[]) {
 
                 outputFileName = optarg;
                 break;
+
+            case 'i':
+
+                interpret = true;
             
             case '?':
                 /* getopt handles the error */
@@ -86,38 +74,48 @@ int main(int argc, char* argv[]) {
 
     };
 
+    // todo support absolute and relative pathing.
+
     if (!std::filesystem::exists(currentDir+"/"+sourceFileName)) {
         std::cerr << "Error: Cannot find the source file specified " << sourceFileName << " at " << currentDir << std::endl;
         return 1;
     };
 
-    std::ifstream source(sourceFileName);
+    if (interpret) {
 
-    if (!source.is_open()) {
-        std::cerr << "Error: Cannot read the source file specified " << sourceFileName << " at " << currentDir << std::endl;
-        return 1;
+        interpreter(sourceFileName);
+
+    } else {
+
+        std::ifstream source(sourceFileName);
+
+        if (!source.is_open()) {
+            std::cerr << "Error: Cannot read the source file specified " << sourceFileName << " at " << currentDir << std::endl;
+            return 1;
+        };
+        
+        while (std::getline(source,line)) {
+            bf.lexCode(line);
+        };
+
+        std::ofstream output(outputFileName);
+
+        if (!output.is_open()) {
+
+            std::cerr << "Error: Unable to open the output file for writing." << std::endl;
+            return 1;
+
+        };
+
+        std::vector<std::string> code = bf.getCode();
+
+        for (std::string bfCode : code) {
+            output << bfCode;
+        };
+
+        output << "\n";
+
     };
-    
-    while (std::getline(source,line)) {
-        bf.lexCode(line);
-    };
-
-    std::ofstream output(outputFileName);
-
-    if (!output.is_open()) {
-
-        std::cerr << "Error: Unable to open the output file for writing." << std::endl;
-        return 1;
-
-    };
-
-    std::vector<std::string> code = bf.getCode();
-
-    for (std::string bfCode : code) {
-        output << bfCode;
-    };
-
-    output << "\n";
 
     return 0;
 

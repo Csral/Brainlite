@@ -54,7 +54,7 @@ class brainlite {
 
     /* Keyword functions */
 
-    void set();
+    void set(void);
     void front(void);
     void back(void);
     void inc(void);
