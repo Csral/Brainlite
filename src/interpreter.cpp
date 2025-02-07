@@ -65,7 +65,17 @@ void interpreterClass::parse(std::string line) {
 interpreterClass::interpreterClass() {
 
     memory = (byte*) malloc( 38000 * sizeof(byte) ); // * Allocate brain's memory
-    pointer = new int(0);
+    runtime_pointer = 0;
+    isLooping = 0;
+
+    validTokens.insert('+');
+    validTokens.insert('-');
+    validTokens.insert('>');
+    validTokens.insert('<');
+    validTokens.insert('[');
+    validTokens.insert(']');
+    validTokens.insert('.');
+    validTokens.insert(',');
 
     execTokens['+'] = [this]() { this->inc(); };
     execTokens['-'] = [this]() { this->dec(); };
@@ -80,26 +90,26 @@ interpreterClass::interpreterClass() {
 
 interpreterClass::~interpreterClass() {
 
+    //delete runtime_pointer;
     free(memory);
-    delete pointer;
 
 }
 
 void interpreterClass::inc(void) {
 
-    this->memory[this->pointer]++;
+    this->memory[this->runtime_pointer]++;
 
 }
 
 void interpreterClass::dec(void) {
 
-    this->memory[this->pointer]--;
+    this->memory[this->runtime_pointer]--;
 
 }
 
 void interpreterClass::print(void) {
-
-    std::cout << (char) this->memory[this->pointer];
+    
+    std::cout << static_cast<char>(this->memory[this->runtime_pointer]);
 
 }
 
@@ -109,18 +119,45 @@ void interpreterClass::input(void) {
 
     std::cin >> collector;
 
-    this->memory[this->pointer] = (int) collector;   
+    this->memory[this->runtime_pointer] = static_cast<int>(collector);
 
 }
 
 void interpreterClass::left(void) {
 
-    this->pointer--;
+    this->runtime_pointer--;
 
 }
 
 void interpreterClass::right(void) {
 
-    this->pointer++;
+    this->runtime_pointer++;
+
+}
+
+void interpreterClass::loop(void) {
+
+    isLooping++; //* Some loop has started.
+
+    while (memory[this->runtime_pointer] != 0) {
+
+        interpreterClass::exec_func();
+
+        memory[this->runtime_pointer]--;
+
+    }
+      
+    interpreterClass::end_loop();
+
+}
+
+void interpreterClass::end_loop(void) {
+    
+    if (!isLooping) { //* Not even one loop is going on
+
+        std::cerr << "Loop terminated without initalizing.\n";
+        exit(1);
+
+    }
 
 }

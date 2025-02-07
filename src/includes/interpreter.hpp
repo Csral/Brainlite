@@ -1,6 +1,7 @@
 #pragma once
 
 #include <iostream>
+#include <fstream>
 #include <string>
 #include <filesystem>
 #include <malloc.h>
@@ -16,7 +17,8 @@ class interpreterClass {
 
     private:
     byte* memory;
-    int* pointer;
+    int runtime_pointer;
+    int isLooping;
     std::unordered_set<char> validTokens;
 
     /* Mappers */
