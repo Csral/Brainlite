@@ -67,6 +67,7 @@ class brainlite {
     void loop(void);
     void whatis(void);
     void end_loop(void);
+    void out(void);
 
     /* Functional Map */
 

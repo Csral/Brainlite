@@ -46,6 +46,8 @@ brainlite::brainlite() { // * Constructor
     validTokens.insert("print");
     validTokens.insert("whatis");
     validTokens.insert("end");
+    validTokens.insert("out");
+    validTokens.insert("input");
 
     execTokens["set"] = [this]() { this->set(); };
     execTokens["front"] = [this]() { this->front(); };
@@ -58,9 +60,11 @@ brainlite::brainlite() { // * Constructor
     execTokens["dec"] = [this]() { this->dec(); };
     execTokens["dectill"] = [this]() { this->dectill(); };
     execTokens["print"] = [this]() { this->print(); };
+    execTokens["input"] = [this]() { this->input(); };
     execTokens["loop"] = [this]() { this->loop(); };
     execTokens["whatis"] = [this]() { this->whatis(); };
     execTokens["end"] = [this]() { this->end_loop(); };
+    execTokens["out"] = [this]() { this->out(); };
 
 };
 
@@ -534,7 +538,7 @@ void brainlite::print(void) {
             ended = true;
         };
 
-        if (current_line->at(j) == '"' || current_line->at(j) == ' ' || current_line->at(j) == '\n' || current_line->at(j) == ';') { // * The line/args ended.
+        if (current_line->at(j) == '"' || current_line->at(j) == ';') { // * The line/args ended.
 
             // * Our arg must be a num!
             // * Validate by isNan
@@ -567,15 +571,43 @@ void brainlite::print(void) {
 
     };
 
+    if (!ended) {
+        if (skipIfError) return;
+
+        err_msg << "Expected \" to end the print statement. Found none\n" << "At: " << *current_line << "\n";
+        throw std::invalid_argument(err_msg.str());
+    }
+
     internalSet = true;
 
-    for (char letter : args) {
+    for (int i = 0; i < args.length(); i++) {
 
-        internalVal = ascii(letter);
+        char letter = args[i];
+
+        if (letter == '\\'  && i + 1 < args.size()) {
+
+            internalVal = 0;
+
+            char nextLetter = args[i+1];
+
+            if (nextLetter == 'n') {
+                internalVal = ascii('\n');
+                i++;
+            } else if (nextLetter == 't') {
+                internalVal = ascii('\t');
+                i++;
+            } else if (nextLetter == '\\') {
+                internalVal = ascii(letter);
+                i++;
+            }
+
+        } else {
+            internalVal = ascii(letter);
+        }
 
         brainlite::set();
 
-        compiled_code.push_back(">");
+        compiled_code.push_back(".>");
 
     };
 
@@ -849,3 +881,9 @@ void brainlite::end_loop(void) {
     }
 
 };
+
+void brainlite::out(void) {
+
+    compiled_code.push_back(".");
+
+}
