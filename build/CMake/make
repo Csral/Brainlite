@@ -1,0 +1,41 @@
+CXX = g++
+CXXFLAGS = -c
+
+SRC_DIR = ../../src
+BIN_DIR = $(SRC_DIR)/bins
+INC_DIR = $(SRC_DIR)/includes
+
+TARGET = $(BIN_DIR)/brainlite
+
+OBJS = $(BIN_DIR)/main.o $(BIN_DIR)/utils.o $(BIN_DIR)/brainuf.o $(BIN_DIR)/interpreter.o
+
+$(BIN_DIR):
+    mkdir -p $(BIN_DIR)
+
+$(TARGET): $(OBJS)
+	$(CXX) $(OBJS) -o $(TARGET)
+
+$(BIN_DIR)/main.o: $(SRC_DIR)/main.cpp
+	$(CXX) $(CXXFLAGS) $(SRC_DIR)/main.cpp -o $(BIN_DIR)/main.o
+
+$(BIN_DIR)/utils.o: $(SRC_DIR)/utils.cpp $(INC_DIR)/utils.hpp $(INC_DIR)/errors.hpp
+	$(CXX) $(CXXFLAGS) $(SRC_DIR)/utils.cpp -o $(BIN_DIR)/utils.o
+
+$(BIN_DIR)/brainuf.o: $(SRC_DIR)/brainuf.cpp $(INC_DIR)/errors.hpp $(INC_DIR)/brainuf.hpp $(INC_DIR)/utils.hpp
+	$(CXX) $(CXXFLAGS) $(SRC_DIR)/brainuf.cpp -o $(BIN_DIR)/brainuf.o
+
+$(BIN_DIR)/interpreter.o: $(SRC_DIR)/interpreter.cpp $(INC_DIR)/interpreter.hpp
+	$(CXX) $(CXXFLAGS) $(SRC_DIR)/interpreter.cpp -o $(BIN_DIR)/interpreter.o
+
+.PHONY: clean
+clean:
+	rm -f $(OBJS)
+
+.PHONY: install
+install: $(TARGET)
+	chmod 755 $(TARGET)
+	chown root:root $(TARGET)
+	mv $(TARGET) /usr/bin/
+
+.PHONY: all
+all: $(TARGET)
