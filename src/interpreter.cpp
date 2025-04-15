@@ -32,9 +32,14 @@ void interpreter(std::string sourceFile) {
 
     while (std::getline(source,line)) {
         
-        ic.parse(line);
+        ic.source_code.push_back(line);
 
     };
+
+    for(auto scode : ic.source_code) {
+        ic.parse(scode);
+        ic.line_no++;
+    }
 
 
 };
@@ -47,7 +52,9 @@ bool interpreterClass::validate(const char& token) {
 
 void interpreterClass::parse(std::string line) {
 
-    for (char token : line) {
+    for (token_no = 0; token_no < line.length(); token_no++) {
+
+        char token = line.at(token_no);
 
         //* Parse each character as a token
         
@@ -57,6 +64,7 @@ void interpreterClass::parse(std::string line) {
         }
 
         exec_func(token, execTokens);
+        token_no += collectedArgsLength;
 
     }
 
@@ -67,6 +75,9 @@ interpreterClass::interpreterClass() {
     memory = (byte*) malloc( 38000 * sizeof(byte) ); // * Allocate brain's memory
     runtime_pointer = 0;
     isLooping = 0;
+    line_no = 0;
+    token_no = 0;
+    collectedArgsLength = 0;
 
     validTokens.insert('+');
     validTokens.insert('-');
@@ -126,27 +137,71 @@ void interpreterClass::input(void) {
 void interpreterClass::left(void) {
 
     this->runtime_pointer--;
+    if (runtime_pointer < 0) {
+        std::cerr << "Runtime pointer underflow!\n";
+        exit(1);
+    }
 
 }
 
 void interpreterClass::right(void) {
-
+    
     this->runtime_pointer++;
+    if (this->runtime_pointer > 37999) {
+        std::cerr << "Runtime pointer overflow!\n";
+        exit(1);
+    }
 
 }
 
 void interpreterClass::loop(void) {
 
     isLooping++; //* Some loop has started.
+    int start_Ptr = token_no+1;
+    int end_Ptr = std::string::npos;
+
+    /*
+    
+        * Assumptions:
+        * Closing token ']' must lie in same line!
+
+    */
+
+    //* Validate loop ending:
+
+    int bracket_count = 1;
+    int end_Ptr = start_Ptr;
+    
+    while (end_Ptr < source_code.at(line_no).length() && bracket_count > 0) {
+        char c = source_code.at(line_no).at(end_Ptr);
+        if (c == '[') bracket_count++;
+        else if (c == ']') bracket_count--;
+        end_Ptr++;
+    }
+
+    if (bracket_count != 0) {
+        std::cerr << "Loop not terminated!\n";
+        exit(1);
+    }
+
+    /*
+
+        * Loop ends if:
+        * The condition is met -> the current runtime pointer is loop value
+        * Note: token is at '['
+
+    */
+
+    std::string cut_part = source_code.at(line_no).substr(start_Ptr, end_Ptr - start_Ptr);
 
     while (memory[this->runtime_pointer] != 0) {
-
-        interpreterClass::exec_func();
-
-        memory[this->runtime_pointer]--;
+        
+        for (char c : cut_part)
+        interpreterClass::exec_func(c, execTokens);
 
     }
-      
+
+    collectedArgsLength = end_Ptr - start_Ptr + 1;
     interpreterClass::end_loop();
 
 }
@@ -159,5 +214,7 @@ void interpreterClass::end_loop(void) {
         exit(1);
 
     }
+
+    isLooping--;
 
 }

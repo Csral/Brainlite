@@ -8,6 +8,7 @@
 #include <unordered_set>
 #include <unordered_map>
 #include <functional>
+#include <algorithm>
 
 typedef unsigned char byte;
 
@@ -47,5 +48,11 @@ class interpreterClass {
     void input(void);
     void right(void);
     void left(void);
+
+    /* Source Handlers */
+    std::vector<std::string> source_code;
+    int line_no;
+    int token_no;
+    int collectedArgsLength;
 
 };
