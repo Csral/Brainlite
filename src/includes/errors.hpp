@@ -1,36 +1,26 @@
 #pragma once
+#ifndef __BRAINLITE_COMPILER_ERR_INCLUDED__
+#define __BRAINLITE_COMPILER_ERR_INCLUDED__
 
-#include <stdexcept>
-#include <exception>
+constexpr int INTERPRETER_ERR_INVALID_TOKEN = 0x02;
+constexpr int INTERPRETER_ERR_RUNTIME_POINTER_UNDERFLOW = 0x03;
+constexpr int INTERPRETER_ERR_RUNTIME_POINTER_OVERFLOW = 0x04;
+constexpr int INTERPRETER_ERR_LOOP_NOT_TERMINATED = 0x05;
+constexpr int INTERPRETER_ERR_INVALID_LOOP_TERMINATED = 0x06;
 
-class syntaxError : public std::runtime_error {
 
-    public:
+constexpr int COMPILER_ERR_TOKEN_VALIDATION_FAILURE = 101;
+constexpr int COMPILER_ERR_INVALID_KEYWORD = 102;
+constexpr int COMPILER_ERR_SET_KEYWORD_MISSING_ARGUMENT = 103;
+constexpr int COMPILER_ERR_INCTILL_MISSING_ARGUMENT = 104;
+constexpr int COMPILER_ERR_DECTILL_MISSING_ARGUMENT = 106;
+constexpr int COMPILER_ERR_MOVE_MISSING_ARGUMENT = 107;
+constexpr int COMPILER_ERR_PRINT_MISSING_QUOTE = 108;
+constexpr int COMPILER_ERR_PRINT_MISSING_ARGUMENT = 109;
+constexpr int COMPILER_ERR_INPUT_MISSING_ARGUMENT = 110;
+constexpr int COMPILER_ERR_INPUT_MISSING_ARGUMENT_SECOND_OCCURRENCE = 111;
+constexpr int COMPILER_ERR_WHATIS_MISSING_QUOTE = 112;
+constexpr int COMPILER_ERR_WHATIS_MISSING_ARGUMENT = 113;
+constexpr int COMPILER_ERR_END_LOOP_WITHOUT_START = 114;
 
-    syntaxError(const std::string& message) : std::runtime_error(message) {};
-
-};
-
-class invalidToken : public std::runtime_error {
-
-    public:
-
-    invalidToken(const std::string& message) : std::runtime_error(message) {};
-
-};
-
-class interalError : public std::runtime_error {
-
-    public:
-
-    interalError(const std::string& message) : std::runtime_error(message) {};
-
-};
-
-class argsError : public std::runtime_error {
-
-    public:
-
-    argsError(const std::string& message) : std::runtime_error(message) {};
-
-};
+#endif

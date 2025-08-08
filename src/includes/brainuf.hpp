@@ -17,6 +17,8 @@
 */
 
 #pragma once
+#ifndef __BRAINLITE_COMPILER_INCLUDED__
+#define __BRAINLITE_COMPILER_INCLUDED__
 
 #include <iostream>
 
@@ -28,14 +30,13 @@
 #include <functional>
 #include <cmath>
 #include <algorithm>
-
-int gcd(int nums[]);
+#include <stdint.h>
 
 class brainlite {
 
     private: //! Private
 
-    int* pointer;
+    uint64_t* pointer;
     bool skipIfError;
     std::vector<std::string> lex; /* ! Current lexer code (UPDATED PER LINE) */
     std::vector<std::string> compiled_code; /* This code will be written to the output file */
@@ -43,7 +44,7 @@ class brainlite {
     std::unordered_set<std::string> validTokens;
 
     /* Token skipped/ args collected */
-    int argsCollectedLength;
+    uint64_t argsCollectedLength;
 
     /* Mappers */
     std::unordered_map<std::string, std::function<void()>> execTokens;
@@ -65,7 +66,7 @@ class brainlite {
     ~brainlite();
 
     void lexCode(std::string line);
-    int validate(std::string* token);
+    int validate(const std::string& token);
     void debug_tester(void);
     std::vector<std::string> getCode(void);
     int currentValue(void);
@@ -75,8 +76,8 @@ class brainlite {
     void set(void);
     void front(void);
     void back(void);
-    void inc(void);
-    void dec(void);
+    inline void inc(void) noexcept;
+    inline void dec(void) noexcept;
     void inctill(void);
     void dectill(void);
     void print(void);
@@ -85,10 +86,12 @@ class brainlite {
     void loop(void);
     void whatis(void);
     void end_loop(void);
-    void out(void);
+    inline void out(void) noexcept;
 
     /* Functional Map */
 
     void exec_func(const std::string& tokenId, const std::unordered_map<std::string, std::function<void()>>& no_args);
 
 };
+
+#endif

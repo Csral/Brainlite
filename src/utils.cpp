@@ -19,7 +19,7 @@
 #include "includes/utils.hpp"
 #include "includes/errors.hpp"
 
-int toInt(const std::string& num) {
+uint64_t toInt(const std::string& num) {
     int res = 0;
 
     for (char digit : num) {  // Loop through each character in the string
@@ -62,9 +62,7 @@ int ascii(const char& letter) {
 bool endQuestionMark(const std::string& str) {
 
     auto toEnd = str.end();
-
     while (toEnd != str.begin() && (std::isspace(*(--toEnd)) || *toEnd == '\n'));
-
     return toEnd != str.begin() && *toEnd == '?';
 
 };
@@ -72,9 +70,7 @@ bool endQuestionMark(const std::string& str) {
 std::string strip(const std::string& str, const char& reference, const std::string& replace) {
 
     std::string result = "";
-
     for (char letter : str) (letter == ' ' || letter == reference) ? result += replace : result += letter;
-
     return result;
 
 };

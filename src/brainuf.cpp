@@ -33,16 +33,14 @@ void brainlite::exec_func(const std::string& tokenId, const std::unordered_map<s
 void brainlite::debug_tester(void) {
 
     for (std::string code : compiled_code) {
-
         std::cout << code << std::endl;
-
     };
 
 };
 
 brainlite::brainlite() { // * Constructor
 
-    pointer = new int(0); // ! Pointer starts at 0
+    pointer = new uint64_t(0); // ! Pointer starts at 0
     argsCollectedLength = 0;
     current_line = new std::string;
     skipIfError = false;
@@ -87,53 +85,38 @@ brainlite::brainlite() { // * Constructor
 };
 
 brainlite::~brainlite() { // * Destructor
-    delete pointer;  // Free dynamically allocated memory
-    delete current_line;
+    if (pointer) delete pointer;  // Free dynamically allocated memory
+    if (current_line) delete current_line;
 };
 
 std::vector<std::string> brainlite::getCode(void) {
-
     return compiled_code; // get transpiled code.
-    
 };
 
-int brainlite::validate(std::string* token) {
+int brainlite::validate(const std::string& token) {
 
     /*
     
-    * Returns the count of token encountered by lexCode() in validTokens
-    * Simply say, if token is not a valid token then count would be 0 which is boolean false.
-    * So token is not valid else it is valid.
+        * Returns the count of token encountered by lexCode() in validTokens
+        * Simply say, if token is not a valid token then count would be 0 which is boolean false.
+        * So token is not valid else it is valid.
     
     */
 
-    if (token == nullptr) {
-
-        std::stringstream err_msg;
-
-        err_msg << "Unknown error occurred when validating the token " << *token << *current_line << "\n";
-
-        throw interalError(err_msg.str());
-    };
-
-    return validTokens.count(*token);
+    return validTokens.count(token);
 
 };
 
 void brainlite::lexCode(std::string line) {
 
     /*
-    
-    * Main logic wise lexer.
-    
+        * Main logic wise lexer.
     */
 
     *current_line = line;
-
     skipIfError = false;
 
     if (line.empty()) return;
-
     if (line.at(0) == '#') return; // ! Comment
 
     if (endQuestionMark(line)) {
@@ -142,30 +125,29 @@ void brainlite::lexCode(std::string line) {
 
     std::string collection = "";
 
-    for (int i = 0; i < line.length(); i++) {
+    for (uint64_t i = 0; i < line.length(); i++) {
 
         *pointer = i;
-
-        if (i+1 == line.length()) collection += line.at(i);
+        if (i+1 == line.length())
+            collection += line.at(i);
 
         if (line.at(i) == ' ' || line.at(i) == '\n' || i+1 == line.length() || line.at(i) == ';') { // * consider to obtain a token.
 
             if (collection.empty()) continue;
 
-            if (!validate(&collection)) {
-                // todo SYNTAX ERROR BY COUT.
+            if (!validate(collection)) {
                 if (!skipIfError) {
-                    std::string errMsg = collection + " is not a valid keyword\nAt: " + line;
-
+                    
                     delete pointer;
                     delete current_line;
 
-                    throw invalidToken(errMsg);
+                    std::cerr << collection << " is not a valid keyword\nAt: " << line << std::endl;
+                    exit(COMPILER_ERR_INVALID_KEYWORD);
+
                 };
             }; // * Verify if the keyword is right.
 
             exec_func(collection,execTokens);
-
             i += argsCollectedLength;
 
         } else {
@@ -186,10 +168,9 @@ void brainlite::lexCode(std::string line) {
 
 int brainlite::currentValue(void) {
 
-    //! Assumes that there would be no complex statement elements, i.e., statements like "+++>" or such.
+    //* Assumes that there would be no complex statement elements, i.e., statements like "+++>" or such.
 
     int value = 0;
-
     int i = compiled_code.size()-1;
 
     while (i > -1) {
@@ -199,21 +180,21 @@ int brainlite::currentValue(void) {
         } else {
 
             for (char miniToken : compiled_code.at(i)) {
-
+               
                 if (miniToken == '+') {
-                    
-                    if (value == 255) value = -1;
 
+                    if (value == 255)
+                        value = -1;
                     value++;
 
-                }
-                else if (miniToken == '-') {
+                } else if (miniToken == '-') {
                     
-                    if (value == 0) value = 256;
-                    
+                    if (value == 0)
+                        value = 256;
+
                     value--;
-                }
-                else continue;
+
+                } else continue;
 
             };
 
@@ -229,21 +210,18 @@ int brainlite::currentValue(void) {
 
 void brainlite::set(void) {
 
-    //! Return type: No. of characters read for input.
-
-    // ! Current element becomes looper
+    //* Return type: No. of characters read for input.
+    //* Current element becomes looper
 
     std::string args = "";
     std::string code = "";
     int toSet = 0;
-    int j = (*pointer)+1;
+    uint64_t j = (*pointer)+1;
 
     int looper = 0;
 
     if (internalSet) {
-
         toSet = internalVal;
-
     } else {
 
         for (;j<current_line->length();j++) {
@@ -258,13 +236,13 @@ void brainlite::set(void) {
 
                     if (skipIfError) return;
 
-                    std::stringstream err_msg;
-                    err_msg << "Expected an argument for the keyword set, Received None. \n" << "At: " << *current_line << "\n";
-
                     delete pointer;
                     delete current_line;
 
-                    throw std::invalid_argument(err_msg.str());
+                    std::cerr << "Expected an argument for the keyword set, Received None. \n"
+                            << "At: " << *current_line << "\n";
+                    exit(COMPILER_ERR_SET_KEYWORD_MISSING_ARGUMENT);
+
                 }
 
                 break;
@@ -277,7 +255,6 @@ void brainlite::set(void) {
 
         // * now, find the best way to write a code for doing toSet using gcd.
         toSet = toInt(args);
-
         toSet = ringBuffer(toSet);
     
     };
@@ -289,10 +266,9 @@ void brainlite::set(void) {
 
     };
 
-    // ! Logic: Loop 4 times with greatest of num/4 and then remove extra 4's form ceil.
+    //* Logic: Loop 4 times with greatest of num/4 and then remove extra 4's form ceil.
 
     compiled_code.push_back(code);
-
     argsCollectedLength = j;
 
 };
@@ -311,19 +287,17 @@ void brainlite::back(void) {
 
 };
 
-void brainlite::inc(void) {
+inline void brainlite::inc(void) noexcept {
 
     //* Increases one bit
-
     compiled_code.push_back("+");
 
 };
 
 
-void brainlite::dec(void) {
+inline void brainlite::dec(void) noexcept {
 
     //* Increases one bit
-
     compiled_code.push_back("-");
 
 };
@@ -331,13 +305,12 @@ void brainlite::dec(void) {
 void brainlite::inctill(void) {
 
     //* Increases n bit
-
-    //! Return type: No. of characters read for input.
+    //* Return type: No. of characters read for input.
 
     std::string args = "";
     std::string code = "";
     int toSet = 0;
-    int j = (*pointer)+1;
+    uint64_t j = (*pointer)+1;
     int looper = brainlite::currentValue();
 
     for (;j<current_line->length();j++) {
@@ -352,11 +325,13 @@ void brainlite::inctill(void) {
 
                 if (skipIfError) return;
 
-                std::stringstream err_msg;
-                err_msg << "Expected an argument for the keyword set, Received None. \n" << "At: " << *current_line << "\n";
                 delete pointer;
                 delete current_line;
-                throw std::invalid_argument(err_msg.str());
+
+                std::cerr << "Missing numeric argument after 'inctill' keyword.\n"
+                        << "At: " << *current_line << "\n";
+                exit(COMPILER_ERR_INCTILL_MISSING_ARGUMENT);
+
             }
 
             break;
@@ -368,7 +343,6 @@ void brainlite::inctill(void) {
     };
 
     toSet = toInt(args);
-
     toSet = ringBuffer(toSet);
 
     while (looper < toSet) {
@@ -379,7 +353,6 @@ void brainlite::inctill(void) {
     };
 
     compiled_code.push_back(code);
-
     argsCollectedLength = j;
 
 };
@@ -387,13 +360,12 @@ void brainlite::inctill(void) {
 void brainlite::dectill(void) {
 
     //* dec n bit
-
-    //! Return type: No. of characters read for input.
+    //*Return type: No. of characters read for input.
 
     std::string args = "";
     std::string code = "";
     int toSet = 0;
-    int j = (*pointer)+1;
+    uint64_t j = (*pointer)+1;
     int looper = brainlite::currentValue();
 
     for (;j<current_line->length();j++) {
@@ -408,11 +380,13 @@ void brainlite::dectill(void) {
 
                 if (skipIfError) return;
 
-                std::stringstream err_msg;
-                err_msg << "Expected an argument for the keyword set, Received None. \n" << "At: " << *current_line << "\n";
                 delete pointer;
                 delete current_line;
-                throw std::invalid_argument(err_msg.str());
+
+                std::cerr << "Missing numeric argument after 'dectill' keyword.\n"
+                        << "At: " << *current_line << "\n";
+                exit(COMPILER_ERR_DECTILL_MISSING_ARGUMENT);
+
             }
 
             break;
@@ -433,26 +407,20 @@ void brainlite::dectill(void) {
     };
 
     compiled_code.push_back(code);
-
     argsCollectedLength = j;
 
 };
 
-
 void brainlite::move(void) {
 
     //* move n bit
-
-    //! Return type: No. of characters read for input.
+    //* Return type: No. of characters read for input.
 
     std::string args = "";
     std::string code = "";
     int toMove = 0;
-    int j = (*pointer)+1;
+    uint64_t j = (*pointer)+1;
     int looper = 0;
-
-    int top = 0;
-    int bottom = 0;
 
     bool backwards = false;
 
@@ -472,13 +440,13 @@ void brainlite::move(void) {
 
             if (args.length() == 0) {
 
-                if (skipIfError) return;
-
-                std::stringstream err_msg;
-                err_msg << "Expected an argument for the keyword set, Received None. \n" << "At: " << *current_line << "\n";
                 delete pointer;
                 delete current_line;
-                throw std::invalid_argument(err_msg.str());
+
+                std::cerr << "Missing numeric argument after 'move' keyword.\n"
+                        << "At: " << *current_line << "\n";
+                exit(COMPILER_ERR_MOVE_MISSING_ARGUMENT);
+
             }
 
             break;
@@ -525,7 +493,6 @@ void brainlite::move(void) {
     };
 
     compiled_code.push_back(code);
-
     argsCollectedLength = j;
 
 };
@@ -533,19 +500,21 @@ void brainlite::move(void) {
 void brainlite::print(void) {
 
     std::string args = "";
-    int toSet = 0;
-    int j = (*pointer)+1;
-    int looper = 0;
+    uint64_t j = (*pointer)+1;
     
     bool ended = false;
-    std::stringstream err_msg;
 
     if (current_line->at(j) != '"') {
 
         if (skipIfError) return;
 
-        err_msg << "Expected \" after print statement. Found none\n" << "At: " << *current_line << "\n";
-        throw std::invalid_argument(err_msg.str());
+        delete pointer;
+        delete current_line;
+
+        std::cerr << "Expected \" after print statement. Found none\n"
+                << "At: " << *current_line << "\n";
+        exit(COMPILER_ERR_PRINT_MISSING_QUOTE);
+
     };
 
     j++; // * This is done so that the pointer moves forward by unity and allows for the pointer to be set at the start of string.
@@ -566,19 +535,21 @@ void brainlite::print(void) {
 
                 if (skipIfError) return;
 
-                err_msg << "Expected \" to end the print statement. Found none\n" << "At: " << *current_line << "\n";
-                throw std::invalid_argument(err_msg.str());
+                std::cerr << "Expected \" after print statement. Found none\n"
+                        << "At: " << *current_line << "\n";
+                exit(COMPILER_ERR_PRINT_MISSING_QUOTE);
 
             } else if (args.length() == 0) {
 
                 if (skipIfError) return;
 
-                err_msg << "Expected an argument for the keyword print, Received None. \n" << "At: " << *current_line << "\n";
-
                 delete pointer;
                 delete current_line;
 
-                throw std::invalid_argument(err_msg.str());
+                std::cerr << "Expected an argument for the keyword print, Received None. \n"
+                        << "At: " << *current_line << "\n";
+                exit(COMPILER_ERR_PRINT_MISSING_ARGUMENT);
+
             };
 
             break;
@@ -592,13 +563,14 @@ void brainlite::print(void) {
     if (!ended) {
         if (skipIfError) return;
 
-        err_msg << "Expected \" to end the print statement. Found none\n" << "At: " << *current_line << "\n";
-        throw std::invalid_argument(err_msg.str());
+        std::cerr << "Expected \" after print statement. Found none\n"
+                << "At: " << *current_line << "\n";
+        exit(COMPILER_ERR_PRINT_MISSING_QUOTE);
     }
 
     internalSet = true;
 
-    for (int i = 0; i < args.length(); i++) {
+    for (uint64_t i = 0; i < args.length(); i++) {
 
         char letter = args[i];
 
@@ -624,13 +596,11 @@ void brainlite::print(void) {
         }
 
         brainlite::set();
-
         compiled_code.push_back(".>");
 
     };
 
     internalSet = false;
-
     argsCollectedLength = j;
 
 };
@@ -640,7 +610,7 @@ void brainlite::input(void) {
     std::string args = "";
     std::string code = "";
     int toSet = 0;
-    int j = (*pointer)+1;
+    uint64_t j = (*pointer)+1;
 
     int looper = 0;
 
@@ -662,13 +632,13 @@ void brainlite::input(void) {
 
                     if (skipIfError) return;
 
-                    std::stringstream err_msg;
-                    err_msg << "Expected an argument for the keyword input, Received None. \n" << "At: " << *current_line << "\n";
-
                     delete pointer;
                     delete current_line;
 
-                    throw std::invalid_argument(err_msg.str());
+                    std::cerr << "Expected an argument for the keyword input, Received None. \n"
+                            << "At: " << *current_line << "\n";
+                    exit(COMPILER_ERR_INPUT_MISSING_ARGUMENT);
+
                 }
 
                 break;
@@ -714,10 +684,8 @@ void brainlite::loop(void) {
 
    std::string args = "";
    std::string code = "";
-   bool outBreak = false;
-   int numTimes = 0;
 
-   int j = (*pointer)+1; 
+   uint64_t j = (*pointer)+1; 
    
     for (;j<current_line->length();j++) {
 
@@ -731,13 +699,13 @@ void brainlite::loop(void) {
 
                 if (skipIfError) return;
 
-                std::stringstream err_msg;
-                err_msg << "Expected an argument for the keyword input, Received None. \n" << "At: " << *current_line << "\n";
-
                 delete pointer;
                 delete current_line;
 
-                throw std::invalid_argument(err_msg.str());
+                std::cerr << "Expected an argument for the keyword input, Received None. \n"
+                        << "At: " << *current_line << "\n";
+                exit(COMPILER_ERR_INPUT_MISSING_ARGUMENT_SECOND_OCCURRENCE);
+
             }
 
             break;
@@ -767,20 +735,22 @@ void brainlite::loop(void) {
 void brainlite::whatis(void) {
 
     std::string args = "";
-    int toSet = 0;
-    int j = (*pointer)+1;
-    int looper = 0;
+    uint64_t j = (*pointer)+1;
     
     bool ended = false;
     std::string code = "";
-    std::stringstream err_msg;
 
     if (current_line->at(j) != '"') {
 
         if (skipIfError) return;
 
-        err_msg << "Expected \" after whatis statement. Found none\n" << "At: " << *current_line << "\n";
-        throw std::invalid_argument(err_msg.str());
+        delete pointer;
+        delete current_line;
+
+        std::cerr << "Expected \" after whatis statement. Found none\n"
+                << "At: " << *current_line << "\n";
+        exit(COMPILER_ERR_WHATIS_MISSING_QUOTE);
+        
     };
 
     j++; // * This is done so that the pointer moves forward by unity and allows for the pointer to be set at the start of string.
@@ -801,19 +771,24 @@ void brainlite::whatis(void) {
 
                 if (skipIfError) return;
 
-                err_msg << "Expected \" to end the whatis statement. Found none\n" << "At: " << *current_line << "\n";
-                throw std::invalid_argument(err_msg.str());
+                delete pointer;
+                delete current_line;
+
+                std::cerr << "Expected \" after whatis statement. Found none\n"
+                        << "At: " << *current_line << "\n";
+                exit(COMPILER_ERR_WHATIS_MISSING_QUOTE);
 
             } else if (args.length() == 0) {
 
                 if (skipIfError) return;
 
-                err_msg << "Expected an argument for the keyword whatis, Received None. \n" << "At: " << *current_line << "\n";
-
                 delete pointer;
                 delete current_line;
 
-                throw std::invalid_argument(err_msg.str());
+                std::cerr << "Expected an argument for the keyword whatis, Received None. \n"
+                        << "At: " << *current_line << "\n";
+                exit(COMPILER_ERR_WHATIS_MISSING_ARGUMENT);
+
             };
 
             break;
@@ -837,13 +812,10 @@ void brainlite::whatis(void) {
     if (args == "memorypointer") {
 
         internalSet = true;
-
         internalVal = memory_pointer;
-
         brainlite::set();
-
         internalSet = false;
-
+        
         compiled_code.push_back(".");
 
     }
@@ -895,13 +867,16 @@ void brainlite::end_loop(void) {
        compiled_code.push_back(code);
 
     } else {
-        //* Error: Not in loop but end_loop found!
+        delete pointer;
+        delete current_line;
+
+        std::cerr << "Found 'end' keyword without a corresponding loop.\n"
+                << "At: " << *current_line << "\n";
+        exit(COMPILER_ERR_END_LOOP_WITHOUT_START);
     }
 
 };
 
-void brainlite::out(void) {
-
+inline void brainlite::out(void) noexcept{
     compiled_code.push_back(".");
-
 }

@@ -1,5 +1,8 @@
 #pragma once
 
+#ifndef __BRAINLITE_INTERPRETER_INCLUDED__
+#define __BRAINLITE_INTERPRETER_INCLUDED__
+
 #include <iostream>
 #include <fstream>
 #include <string>
@@ -9,6 +12,9 @@
 #include <unordered_map>
 #include <functional>
 #include <algorithm>
+#include <stdint.h>
+
+#include "errors.hpp"
 
 typedef unsigned char byte;
 
@@ -40,19 +46,21 @@ class interpreterClass {
 
     /* Keyword functions */
 
-    void inc(void);
-    void dec(void);
+    inline void inc(void) noexcept;
+    inline void dec(void) noexcept;
     void loop(void);
     void end_loop(void);
-    void print(void);
-    void input(void);
+    inline void print(void) noexcept;
+    void input(void) noexcept;
     void right(void);
     void left(void);
 
     /* Source Handlers */
     std::vector<std::string> source_code;
     int line_no;
-    int token_no;
+    uint32_t token_no;
     int collectedArgsLength;
 
 };
+
+#endif

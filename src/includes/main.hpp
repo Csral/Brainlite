@@ -16,8 +16,12 @@
 
 */
 
+#pragma once
+
+#ifndef __BRAINLITE_INCLUDED__
+#define __BRAINLITE_INCLUDED__
+
 #include <iostream>
-#include <stdio.h>
 #include <map>
 #include <fstream>
 #include <stdlib.h>
@@ -37,3 +41,5 @@
 #endif
 
 void help();
+
+#endif

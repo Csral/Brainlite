@@ -13,9 +13,7 @@ void interpreterClass::exec_func(const char& tokenId, const std::unordered_map<c
 void interpreter(std::string sourceFile) {
 
     interpreterClass ic;
-
     std::string line; // storage for lines
-
     std::string currentDir = std::filesystem::current_path();
 
     if (!std::filesystem::exists(currentDir+"/"+sourceFile)) {
@@ -24,16 +22,13 @@ void interpreter(std::string sourceFile) {
     };
     
     std::ifstream source(sourceFile);
-
     if (!source.is_open()) {
         std::cerr << "Error: Cannot read the source file specified " << sourceFile << " at " << currentDir << std::endl;
         exit(1);
     };
 
     while (std::getline(source,line)) {
-        
         ic.source_code.push_back(line);
-
     };
 
     for(auto scode : ic.source_code) {
@@ -45,9 +40,7 @@ void interpreter(std::string sourceFile) {
 };
 
 bool interpreterClass::validate(const char& token) {
-
     return validTokens.count(token);
-
 }
 
 void interpreterClass::parse(std::string line) {
@@ -60,7 +53,8 @@ void interpreterClass::parse(std::string line) {
         
         if (!validate(token)) {
             std::cout << "Invalid token encountered!\n";
-            exit(EXIT_FAILURE);
+            free(this->memory);
+            exit(INTERPRETER_ERR_INVALID_TOKEN);
         }
 
         exec_func(token, execTokens);
@@ -100,36 +94,25 @@ interpreterClass::interpreterClass() {
 }
 
 interpreterClass::~interpreterClass() {
-
-    //delete runtime_pointer;
     free(memory);
-
 }
 
-void interpreterClass::inc(void) {
-
+inline void interpreterClass::inc(void) noexcept {
     this->memory[this->runtime_pointer]++;
-
 }
 
-void interpreterClass::dec(void) {
-
+inline void interpreterClass::dec(void) noexcept {
     this->memory[this->runtime_pointer]--;
-
 }
 
-void interpreterClass::print(void) {
-    
+inline void interpreterClass::print(void) noexcept {
     std::cout << static_cast<char>(this->memory[this->runtime_pointer]);
-
 }
 
-void interpreterClass::input(void) {
+void interpreterClass::input(void) noexcept {
 
     char collector;
-
     std::cin >> collector;
-
     this->memory[this->runtime_pointer] = static_cast<int>(collector);
 
 }
@@ -139,7 +122,8 @@ void interpreterClass::left(void) {
     this->runtime_pointer--;
     if (runtime_pointer < 0) {
         std::cerr << "Runtime pointer underflow!\n";
-        exit(1);
+        free(this->memory);
+        exit(INTERPRETER_ERR_RUNTIME_POINTER_UNDERFLOW);
     }
 
 }
@@ -149,7 +133,8 @@ void interpreterClass::right(void) {
     this->runtime_pointer++;
     if (this->runtime_pointer > 37999) {
         std::cerr << "Runtime pointer overflow!\n";
-        exit(1);
+        free(this->memory);
+        exit(INTERPRETER_ERR_RUNTIME_POINTER_UNDERFLOW);
     }
 
 }
@@ -158,7 +143,7 @@ void interpreterClass::loop(void) {
 
     isLooping++; //* Some loop has started.
     int start_Ptr = token_no+1;
-    int end_Ptr = std::string::npos;
+    uint64_t end_Ptr = std::string::npos;
 
     /*
     
@@ -170,7 +155,7 @@ void interpreterClass::loop(void) {
     //* Validate loop ending:
 
     int bracket_count = 1;
-    int end_Ptr = start_Ptr;
+    end_Ptr = start_Ptr;
     
     while (end_Ptr < source_code.at(line_no).length() && bracket_count > 0) {
         char c = source_code.at(line_no).at(end_Ptr);
@@ -181,7 +166,8 @@ void interpreterClass::loop(void) {
 
     if (bracket_count != 0) {
         std::cerr << "Loop not terminated!\n";
-        exit(1);
+        free(this->memory);
+        exit(INTERPRETER_ERR_LOOP_NOT_TERMINATED);
     }
 
     /*
@@ -195,10 +181,8 @@ void interpreterClass::loop(void) {
     std::string cut_part = source_code.at(line_no).substr(start_Ptr, end_Ptr - start_Ptr);
 
     while (memory[this->runtime_pointer] != 0) {
-        
         for (char c : cut_part)
         interpreterClass::exec_func(c, execTokens);
-
     }
 
     collectedArgsLength = end_Ptr - start_Ptr + 1;
@@ -209,12 +193,10 @@ void interpreterClass::loop(void) {
 void interpreterClass::end_loop(void) {
     
     if (!isLooping) { //* Not even one loop is going on
-
         std::cerr << "Loop terminated without initalizing.\n";
-        exit(1);
-
+        free(this->memory);
+        exit(INTERPRETER_ERR_INVALID_LOOP_TERMINATED);
     }
-
     isLooping--;
 
 }
