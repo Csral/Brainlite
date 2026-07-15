@@ -22,7 +22,8 @@ Brainlite introduces multiple keywords which can easen the task of writing a bra
 ---
 
 # How to use this compiler?
-## NOTE: THIS COMPILER WORKS ONLY ON LINUX.
+
+**NOTE: THIS COMPILER WORKS ONLY ON LINUX.**
 
 1. Clone this repository
 2. Run 
@@ -31,13 +32,10 @@ Brainlite introduces multiple keywords which can easen the task of writing a bra
 
 
 User options:
-2. Help: -h
-4. intepreter: -i
-5. output: -o
----
-### Future works:
-Use euclidian GCD algorithm, early-lookup write optimizations and in general compiler optimizations are not available
----
+
+Help: -h
+intepreter: -i
+output: -o
 
 ---
 ## Additional information/Caution
